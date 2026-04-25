@@ -1,77 +1,100 @@
-import { Asset, Button, Top } from "@toss/tds-mobile";
+import { useMemo, useState } from "react";
+
 import "./App.css";
-import { InAppPurchasePage } from "./pages/InAppPurchasePage";
-import { InAppAdsPage } from "./pages/InAppAdsPage";
-import { useState } from "react";
+import { useReminders } from "./hooks/useReminders";
+import { CreateReminderPage } from "./pages/CreateReminderPage";
+import { HomePage } from "./pages/HomePage";
+import { InboxPage } from "./pages/InboxPage";
+import { ReminderDetailPage } from "./pages/ReminderDetailPage";
+import { ReminderListPage } from "./pages/ReminderListPage";
+
+type Page = "home" | "create" | "list" | "inbox" | "detail";
+
+// TODO: Production must replace this with an approved Apps in Toss user identity.
+const DEV_TOSS_USER_KEY = "local-dev-user";
 
 function App() {
-  const [page, setPage] = useState<string | null>(null);
+  const [page, setPage] = useState<Page>("home");
+  const [selectedReminderId, setSelectedReminderId] = useState<string | null>(
+    null,
+  );
+  const reminders = useReminders(DEV_TOSS_USER_KEY);
 
-  if (page === "iap") return <InAppPurchasePage onBack={() => setPage(null)} />;
-  if (page === "iaa") return <InAppAdsPage onBack={() => setPage(null)} />;
+  const activeCount = useMemo(
+    () =>
+      reminders.reminders.filter((reminder) => reminder.status === "active")
+        .length,
+    [reminders.reminders],
+  );
+
+  const selectedReminder = useMemo(
+    () =>
+      reminders.reminders.find((reminder) => reminder.id === selectedReminderId),
+    [reminders.reminders, selectedReminderId],
+  );
+
+  function openDetail(id: string) {
+    setSelectedReminderId(id);
+    setPage("detail");
+  }
+
+  if (page === "create") {
+    return (
+      <CreateReminderPage
+        error={reminders.error}
+        onBack={() => setPage("home")}
+        onCreated={() => setPage("list")}
+        onCreate={reminders.create}
+      />
+    );
+  }
+
+  if (page === "list") {
+    return (
+      <ReminderListPage
+        reminders={reminders.reminders}
+        loading={reminders.loading}
+        error={reminders.error}
+        onBack={() => setPage("home")}
+        onCreate={() => setPage("create")}
+        onRefresh={reminders.refresh}
+        onOpenDetail={openDetail}
+      />
+    );
+  }
+
+  if (page === "inbox") {
+    return (
+      <InboxPage
+        reminders={reminders.reminders}
+        onBack={() => setPage("home")}
+        onOpenDetail={openDetail}
+      />
+    );
+  }
+
+  if (page === "detail") {
+    return (
+      <ReminderDetailPage
+        reminder={selectedReminder}
+        onBack={() => setPage("list")}
+        onComplete={async (id) => {
+          await reminders.complete(id);
+        }}
+        onSnooze={async (id) => {
+          await reminders.snooze(id);
+        }}
+      />
+    );
+  }
 
   return (
-    <>
-      <Top
-        title={<Top.TitleParagraph size={22}>반가워요</Top.TitleParagraph>}
-        subtitleBottom={
-          <Top.SubtitleParagraph size={17}>
-            앱인토스 개발을 시작해 보세요.
-          </Top.SubtitleParagraph>
-        }
-      />
-
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "16px",
-          padding: "24px",
-        }}
-      >
-        <Button
-          as="a"
-          variant="weak"
-          href="https://developers-apps-in-toss.toss.im"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          개발자센터
-        </Button>
-        <Button
-          as="a"
-          variant="weak"
-          href="https://techchat-apps-in-toss.toss.im"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          개발자 커뮤니티
-        </Button>
-        <Button color="dark" variant="weak" onClick={() => setPage("iap")}>
-          인앱결제 테스트하기
-        </Button>
-
-        <Button color="dark" variant="weak" onClick={() => setPage("iaa")}>
-          인앱광고 테스트하기
-        </Button>
-      </div>
-
-      <div
-        style={{
-          position: "fixed",
-          bottom: "24px",
-          left: "50%",
-          transform: "translateX(-50%)",
-        }}
-      >
-        <Asset.Image
-          alt="apps in toss logo"
-          frameShape={{ width: 160 }}
-          backgroundColor="transparent"
-          src={`${import.meta.env.BASE_URL}appsintoss-logo.png`}
-        />
-      </div>
-    </>
+    <HomePage
+      activeCount={activeCount}
+      onCreate={() => setPage("create")}
+      onOpenList={() => setPage("list")}
+      onOpenInbox={() => setPage("inbox")}
+    />
   );
 }
 

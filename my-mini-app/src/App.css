@@ -4,10 +4,46 @@
   box-sizing: border-box;
 }
 
+.app-page {
+  min-height: 100vh;
+  padding-bottom: 32px;
+  background-color: #ffffff;
+}
+
+.app-section {
+  padding: 16px 24px;
+}
+
+.app-section--stack,
+.app-actions,
+.app-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-section--stack {
+  gap: 16px;
+}
+
+.app-actions {
+  gap: 12px;
+}
+
+.app-form {
+  gap: 8px;
+}
+
+.consent-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
 @media (min-width: 481px) {
   #root {
-    background-color: #ffffff !important;
     max-width: 480px;
     margin: 0 auto;
+    background-color: #ffffff !important;
   }
 }

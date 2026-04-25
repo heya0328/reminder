@@ -75,7 +75,7 @@ export function useInAppAds(adGroupId: string): UseInAppAdsReturn {
         console.error("광고 정리(cleanup) 중 에러:", error);
       }
     };
-  }, []);
+  }, [dialog, load]);
 
   /**
    * 광고를 실제로 화면에 표시합니다.
@@ -126,7 +126,7 @@ export function useInAppAds(adGroupId: string): UseInAppAdsReturn {
       setIsAdLoaded(false);
       load();
     }
-  }, [adGroupId, isAdLoaded, isSupported, load]);
+  }, [adGroupId, isAdLoaded, isSupported, load, toast]);
 
   return { isAdLoaded, isSupported, showAd, lastReward };
 }

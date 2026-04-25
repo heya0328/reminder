@@ -41,7 +41,7 @@ export function useInAppPurchase(): UseInAppPurchaseReturn {
     }
 
     fetchProducts();
-  }, []);
+  }, [dialog]);
 
   const grantProduct = useCallback((orderId: string) => {
     // TODO: 여기에 상품 지급 로직을 작성해주세요.
