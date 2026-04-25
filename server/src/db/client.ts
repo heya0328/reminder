@@ -77,10 +77,11 @@ function createSupabaseStore(url: string, key: string): ReminderStore {
     if (!response.ok) {
       throw new Error(`Supabase ${table} request failed: ${response.status} ${await response.text()}`);
     }
-    if (response.status === 204) {
+    const body = await response.text();
+    if (!body) {
       return undefined as T;
     }
-    return (await response.json()) as T;
+    return JSON.parse(body) as T;
   }
 
   async function load() {
