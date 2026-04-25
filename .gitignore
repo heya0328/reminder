@@ -4,6 +4,11 @@ dist
 vite.config.js
 vite.config.d.ts
 .DS_Store
+.env
+.env.local
+server/.env
+server/.env.local
 *.ait
+server/random-reminder.json
 .worktrees/*
 !.worktrees/.gitkeep

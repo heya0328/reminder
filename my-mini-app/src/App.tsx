@@ -10,7 +10,7 @@ import { ReminderListPage } from "./pages/ReminderListPage";
 
 type Page = "home" | "create" | "list" | "inbox" | "detail";
 
-// TODO: Production must replace this with an approved Apps in Toss user identity.
+// Production must replace this with an approved Apps in Toss user identity.
 const DEV_TOSS_USER_KEY = "local-dev-user";
 
 function App() {

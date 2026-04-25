@@ -1,0 +1,13 @@
+{
+  "name": "random-reminder-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.ts",
+    "build": "../my-mini-app/node_modules/.bin/tsc --noEmit",
+    "test": "node --test tests/*.test.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

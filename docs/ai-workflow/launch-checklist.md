@@ -42,3 +42,11 @@ Use this checklist before requesting review or release.
 - Deployment API key/profile is configured locally, not committed.
 - `npm run deploy` is run only after final confirmation.
 
+## Random Reminder
+
+- SMS consent text reviewed.
+- SMS unsubscribe path tested.
+- Daily SMS cap tested.
+- Night restriction tested.
+- Push unavailable fallback tested.
+- Provider failures do not block app usage.
