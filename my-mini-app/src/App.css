@@ -133,13 +133,12 @@
 
 .create-task-section [role="radiogroup"],
 .create-task-section [data-tds-component-name="SegmentedControl"] {
-  display: block;
   width: 100% !important;
   margin-left: 0;
 }
 
-.create-task-section [class*="SegmentedControl"] {
-  width: 100% !important;
+.create-task-section > [class*="css-"]:has([role="radiogroup"]) {
+  width: 100%;
 }
 
 .create-task-message-box {
