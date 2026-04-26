@@ -8,7 +8,6 @@ import {
   Spacing,
   Text,
   TextArea,
-  Top,
 } from "@toss/tds-mobile";
 import { FormEvent, useState } from "react";
 
@@ -130,15 +129,11 @@ export function CreateReminderPage({
         </div>
       </div>
 
-      <Spacing size={12} />
-
-      <Top
-        title={
-          <Top.TitleParagraph size={22} color={adaptive.grey900}>
-            할 일 추가
-          </Top.TitleParagraph>
-        }
-      />
+      <section className="create-task-title-section">
+        <Text display="block" color={adaptive.grey900} typography="t3" fontWeight="bold">
+          할 일 추가
+        </Text>
+      </section>
 
       <form className="create-task-form" onSubmit={handleSubmit}>
         <section className="create-task-textarea-section">
