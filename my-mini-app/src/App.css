@@ -42,7 +42,7 @@
 
 .create-task-page {
   --create-page-x: 28px;
-  --create-control-x: 32px;
+  --create-control-x: 20px;
   --create-message-border: rgba(49, 130, 246, 0.32);
   --create-message-bg: rgba(49, 130, 246, 0.1);
 
@@ -133,8 +133,13 @@
 
 .create-task-section [role="radiogroup"],
 .create-task-section [data-tds-component-name="SegmentedControl"] {
+  display: block;
   width: 100% !important;
   margin-left: 0;
+}
+
+.create-task-section [class*="SegmentedControl"] {
+  width: 100% !important;
 }
 
 .create-task-message-box {
@@ -142,7 +147,7 @@
   min-height: 62px;
   align-items: center;
   justify-content: center;
-  padding: 12px 16px;
+  padding: 10px 16px;
   border: 1px solid var(--create-message-border);
   border-radius: 12px;
   background: var(--create-message-bg);
