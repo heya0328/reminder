@@ -134,11 +134,17 @@
 .create-task-section [role="radiogroup"],
 .create-task-section [data-tds-component-name="SegmentedControl"] {
   width: 100% !important;
+  max-width: none !important;
   margin-left: 0;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 .create-task-section > div:has(> [role="radiogroup"]) {
   width: 100%;
+  margin-right: 0 !important;
+  margin-left: 0 !important;
   padding-right: 0 !important;
   padding-left: 0 !important;
 }
@@ -147,6 +153,10 @@
 .create-task-section > div:has([role="radiogroup"]) > div > div {
   width: 100% !important;
   max-width: none !important;
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
 }
 
 .create-task-message-box {
