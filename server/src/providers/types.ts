@@ -2,6 +2,7 @@ export interface SendMessageInput {
   userId: string;
   reminderId: string;
   title: string;
+  phoneNumber?: string | null;
 }
 
 export interface SendMessageResult {

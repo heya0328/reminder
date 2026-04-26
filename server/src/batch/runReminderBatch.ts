@@ -56,6 +56,7 @@ export async function runReminderBatch(repo: ReminderRepository, options: RunRem
       userId: reminder.userId,
       reminderId: reminder.id,
       title: reminder.title,
+      phoneNumber: reminder.phoneNumber,
     });
     const attempt = repo.addSendAttempt({
       reminderId: reminder.id,

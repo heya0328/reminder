@@ -5,7 +5,7 @@ import { updateSmsConsent, unsubscribeSms } from "./consents/routes.ts";
 import { createDb } from "./db/client.ts";
 import { migrate } from "./db/schema.ts";
 import { LogPushProvider } from "./providers/logPushProvider.ts";
-import { LogSmsProvider } from "./providers/logSmsProvider.ts";
+import { createSmsProvider } from "./providers/smsProviderFactory.ts";
 import type { ReminderProvider } from "./providers/types.ts";
 import { ReminderRepository } from "./reminders/repository.ts";
 import { createReminder, publicReminder, type CreateReminderPayload } from "./reminders/routes.ts";
@@ -80,7 +80,7 @@ export function buildApp(options: BuildAppOptions = {}) {
   migrate(store);
   const repo = new ReminderRepository(store);
   const pushProvider = options.pushProvider ?? new LogPushProvider();
-  const smsProvider = options.smsProvider ?? new LogSmsProvider();
+  const smsProvider = options.smsProvider ?? createSmsProvider();
 
   async function inject(input: InjectOptions): Promise<InjectResponse> {
     await store.ready;
