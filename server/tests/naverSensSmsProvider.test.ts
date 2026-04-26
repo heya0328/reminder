@@ -52,4 +52,32 @@ describe("NaverSensSmsProvider", () => {
     assert.equal(requestedBody.messages[0].to, "01033334444");
     assert.equal(requestedBody.content.includes("병원 예약"), false);
   });
+
+  it("returns SENS error messages for failed requests", async () => {
+    const provider = new NaverSensSmsProvider({
+      accessKey: "access-key",
+      secretKey: "secret-key",
+      serviceId: "ncp:sms:kr:123:test",
+      fromNumber: "010-1111-2222",
+      baseUrl: "https://example.test",
+      fetchImpl: async () =>
+        new Response(
+          JSON.stringify({
+            status: 404,
+            errorMessage: "'from' is not an authenticated tel number.",
+          }),
+          { status: 404 },
+        ),
+    });
+
+    const result = await provider.send({
+      userId: "user-1",
+      reminderId: "reminder-1",
+      title: "병원 예약",
+      phoneNumber: "010-3333-4444",
+    });
+
+    assert.equal(result.ok, false);
+    assert.equal(result.errorReason, "'from' is not an authenticated tel number.");
+  });
 });

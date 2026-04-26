@@ -14,6 +14,8 @@ interface NaverSensSendResponse {
   requestId?: string;
   statusCode?: string;
   statusName?: string;
+  errorMessage?: string;
+  message?: string;
 }
 
 export function createNaverSensSignature(input: { method: string; uri: string; timestamp: string; accessKey: string; secretKey: string }) {
@@ -88,7 +90,7 @@ export class NaverSensSmsProvider implements ReminderProvider {
     if (!response.ok || payload.statusName === "fail") {
       return {
         ok: false,
-        errorReason: payload.statusCode ? `naver_sens_${payload.statusCode}` : `naver_sens_http_${response.status}`,
+        errorReason: payload.errorMessage ?? payload.message ?? (payload.statusCode ? `naver_sens_${payload.statusCode}` : `naver_sens_http_${response.status}`),
       };
     }
 
