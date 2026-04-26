@@ -35,11 +35,11 @@ const priorityDescriptions: Record<Priority, string> = {
 };
 
 const randomReminderDescriptions = [
-  { value: 0, text: "3일 안에 한 번만 조용히 알려드릴게요" },
-  { value: 25, text: "2~3일 안에 한 번 떠올려드릴게요" },
-  { value: 50, text: "1~3일 안에 적당히 랜덤으로 알려드릴게요" },
-  { value: 75, text: "하루 안에 한두 번 더 자주 알려드릴게요" },
-  { value: 100, text: "오늘 안에 놓치지 않게 강하게 알려드릴게요" },
+  { value: 0, text: "오늘 안에 한 번 확실히 알려드릴게요" },
+  { value: 25, text: "내일 안에 한 번 다시 떠올려드릴게요" },
+  { value: 50, text: "3일 안에 예측하기 어렵게 알려드릴게요" },
+  { value: 75, text: "4일 안에 더 불규칙하게 떠올려드릴게요" },
+  { value: 100, text: "5일 안에 가장 예상 못 한 순간 알려드릴게요" },
 ];
 
 export function CreateReminderPage({
