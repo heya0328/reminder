@@ -35,9 +35,11 @@ const priorityDescriptions: Record<Priority, string> = {
 };
 
 const randomReminderDescriptions = [
-  { max: 33, text: "3일 안에 차분하게 알려드릴게요" },
-  { max: 66, text: "1~3일 안에 시간은 랜덤으로 알려드릴게요" },
-  { max: 100, text: "하루 안에 조금 더 불규칙하게 알려드릴게요" },
+  { value: 0, text: "3일 안에 한 번만 조용히 알려드릴게요" },
+  { value: 25, text: "2~3일 안에 한 번 떠올려드릴게요" },
+  { value: 50, text: "1~3일 안에 적당히 랜덤으로 알려드릴게요" },
+  { value: 75, text: "하루 안에 한두 번 더 자주 알려드릴게요" },
+  { value: 100, text: "오늘 안에 놓치지 않게 강하게 알려드릴게요" },
 ];
 
 export function CreateReminderPage({
@@ -53,8 +55,8 @@ export function CreateReminderPage({
   const [formError, setFormError] = useState<string | null>(null);
 
   const randomDescription =
-    randomReminderDescriptions.find((description) => randomness <= description.max)?.text ??
-    randomReminderDescriptions[1].text;
+    randomReminderDescriptions.find((description) => description.value === randomness)?.text ??
+    randomReminderDescriptions[2].text;
 
   async function submitReminder() {
     setFormError(null);
@@ -187,6 +189,7 @@ export function CreateReminderPage({
             value={randomness}
             minValue={0}
             maxValue={100}
+            step={25}
             color="#3182f6"
             label={{ max: "불규칙적", min: "규칙적" }}
             onValueChange={setRandomness}
