@@ -1,25 +1,17 @@
-import { colors } from "@toss/tds-colors";
+import { adaptive } from "@toss/tds-colors";
 import {
-  Button,
-  Checkbox,
-  List,
-  ListHeader,
-  ListRow,
+  Asset,
+  Border,
+  FixedBottomCTA,
   SegmentedControl,
-  Switch,
+  Slider,
+  Spacing,
   Text,
-  TextButton,
-  TextField,
+  TextArea,
   Top,
 } from "@toss/tds-mobile";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 
-import {
-  INTENSITY_DESCRIPTIONS,
-  INTENSITY_LABELS,
-  INTENSITY_OPTIONS,
-  TIME_PRESETS,
-} from "../constants/reminderOptions";
 import type { CreateReminderInput, ReminderIntensity } from "../types/reminder";
 
 interface CreateReminderPageProps {
@@ -29,6 +21,26 @@ interface CreateReminderPageProps {
   onCreate: (input: Omit<CreateReminderInput, "tossUserKey">) => Promise<void>;
 }
 
+type Priority = "simple" | "normal" | "important";
+
+const priorityToIntensity: Record<Priority, ReminderIntensity> = {
+  simple: "gentle",
+  normal: "normal",
+  important: "strong",
+};
+
+const priorityDescriptions: Record<Priority, string> = {
+  simple: "가볍게 떠올리면 되는 일",
+  normal: "급하지는 않지만 잊으면 안 되는 일",
+  important: "잊으면 곤란한 중요한 일",
+};
+
+const randomReminderDescriptions = [
+  { max: 33, text: "3일 안에 차분하게 알려드릴게요" },
+  { max: 66, text: "1~3일 안에 시간은 랜덤으로 알려드릴게요" },
+  { max: 100, text: "하루 안에 조금 더 불규칙하게 알려드릴게요" },
+];
+
 export function CreateReminderPage({
   error,
   onBack,
@@ -36,31 +48,20 @@ export function CreateReminderPage({
   onCreate,
 }: CreateReminderPageProps) {
   const [title, setTitle] = useState("");
-  const [timePresetId, setTimePresetId] = useState(TIME_PRESETS[0].id);
-  const [intensity, setIntensity] = useState<ReminderIntensity>("normal");
-  const [smsEnabled, setSmsEnabled] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [smsConsentChecked, setSmsConsentChecked] = useState(false);
+  const [priority, setPriority] = useState<Priority>("normal");
+  const [randomness, setRandomness] = useState(50);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const selectedTimePreset = useMemo(
-    () =>
-      TIME_PRESETS.find((preset) => preset.id === timePresetId) ??
-      TIME_PRESETS[0],
-    [timePresetId],
-  );
+  const randomDescription =
+    randomReminderDescriptions.find((description) => randomness <= description.max)?.text ??
+    randomReminderDescriptions[1].text;
 
-  const canSubmit =
-    title.trim().length > 0 &&
-    (!smsEnabled || (phoneNumber.trim().length > 0 && smsConsentChecked));
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function submitReminder() {
     setFormError(null);
 
-    if (!canSubmit) {
-      setFormError("제목과 알림 수단을 확인해 주세요.");
+    if (title.trim().length === 0) {
+      setFormError("할 일을 작성해주세요.");
       return;
     }
 
@@ -69,11 +70,10 @@ export function CreateReminderPage({
     try {
       await onCreate({
         title: title.trim(),
-        allowedStartHour: selectedTimePreset.allowedStartHour,
-        allowedEndHour: selectedTimePreset.allowedEndHour,
-        intensity,
-        smsEnabled,
-        phoneNumber: smsEnabled ? phoneNumber.trim() : undefined,
+        allowedStartHour: 9,
+        allowedEndHour: 22,
+        intensity: priorityToIntensity[priority],
+        smsEnabled: false,
       });
       onCreated();
     } catch (caughtError) {
@@ -87,200 +87,134 @@ export function CreateReminderPage({
     }
   }
 
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await submitReminder();
+  }
+
   return (
-    <main className="app-page">
+    <main className="app-page create-task-page">
+      <div className="create-task-appbar" aria-label="앱 상단 메뉴">
+        <button className="create-task-icon-button" type="button" onClick={onBack} aria-label="뒤로가기">
+          <Asset.Icon
+            frameShape={Asset.frameShape.CleanW24}
+            name="icon-arrow-back-ios-mono"
+            color="#191F28ff"
+            aria-hidden={true}
+          />
+        </button>
+        <div className="create-task-brand">
+          <Asset.Image
+            frameShape={Asset.frameShape.CleanW16}
+            src="https://static.toss.im/appsintoss/30619/a5a2f92e-5163-458e-a027-5cafedb34a8f.png"
+            aria-hidden={true}
+          />
+          <Text color="#191F28ff" typography="t6" fontWeight="semibold">
+            랜덤노트
+          </Text>
+        </div>
+        <div className="create-task-window-actions" aria-hidden={true}>
+          <Asset.Icon
+            frameShape={Asset.frameShape.CleanW20}
+            name="icon-dots-mono"
+            color="rgba(0, 19, 43, 0.58)"
+            aria-hidden={true}
+          />
+          <span className="create-task-window-divider" />
+          <Asset.Icon
+            frameShape={Asset.frameShape.CleanW20}
+            name="icon-x-mono"
+            color="rgba(0, 19, 43, 0.58)"
+            aria-hidden={true}
+          />
+        </div>
+      </div>
+
+      <Spacing size={12} />
+
       <Top
         title={
-          <Top.TitleParagraph size={22}>리마인더 만들기</Top.TitleParagraph>
-        }
-        subtitleBottom={
-          <Top.SubtitleParagraph size={17}>
-            제목만 적어두면 랜덤한 시점에 다시 알려드려요.
-          </Top.SubtitleParagraph>
+          <Top.TitleParagraph size={22} color={adaptive.grey900}>
+            할 일 추가
+          </Top.TitleParagraph>
         }
       />
 
-      <form className="app-form" onSubmit={handleSubmit}>
-        <section className="app-section">
-          <TextField
+      <form className="create-task-form" onSubmit={handleSubmit}>
+        <section className="create-task-textarea-section">
+          <TextArea
+            className="create-task-textarea"
             variant="box"
-            label="할 일"
+            hasError={false}
+            label=""
             labelOption="sustain"
-            placeholder="예: 치과 예약 잡기"
+            placeholder="여기에 할 일을 작성해주세요"
             value={title}
             onChange={(event) => setTitle(event.currentTarget.value)}
-            help="구체적으로 쓸수록 나중에 바로 행동하기 쉬워요."
+            minHeight={78}
           />
         </section>
 
-        <List>
-          <ListHeader
-            title={
-              <ListHeader.TitleParagraph typography="t5" fontWeight="bold">
-                받을 시간
-              </ListHeader.TitleParagraph>
-            }
-          />
-          <ListRow
-            verticalPadding="large"
-            contents={
-              <SegmentedControl
-                size="large"
-                value={timePresetId}
-                onChange={setTimePresetId}
-              >
-                {TIME_PRESETS.map((preset) => (
-                  <SegmentedControl.Item key={preset.id} value={preset.id}>
-                    {preset.label}
-                  </SegmentedControl.Item>
-                ))}
-              </SegmentedControl>
-            }
-          />
-          <ListRow
-            verticalPadding="medium"
-            contents={
-              <ListRow.Texts
-                type="1RowTypeA"
-                top={selectedTimePreset.description}
-                topProps={{ color: colors.grey600 }}
-              />
-            }
-          />
-        </List>
+        <Border variant="height16" />
 
-        <List>
-          <ListHeader
-            title={
-              <ListHeader.TitleParagraph typography="t5" fontWeight="bold">
-                강도
-              </ListHeader.TitleParagraph>
-            }
-          />
-          <ListRow
-            verticalPadding="large"
-            contents={
-              <SegmentedControl
-                size="large"
-                value={intensity}
-                onChange={(value) => setIntensity(value as ReminderIntensity)}
-              >
-                {INTENSITY_OPTIONS.map((option) => (
-                  <SegmentedControl.Item key={option} value={option}>
-                    {INTENSITY_LABELS[option]}
-                  </SegmentedControl.Item>
-                ))}
-              </SegmentedControl>
-            }
-          />
-          <ListRow
-            verticalPadding="medium"
-            contents={
-              <ListRow.Texts
-                type="1RowTypeA"
-                top={INTENSITY_DESCRIPTIONS[intensity]}
-                topProps={{ color: colors.grey600 }}
-              />
-            }
-          />
-        </List>
+        <section className="create-task-section">
+          <Spacing size={20} />
+          <Text display="block" color={adaptive.grey700} typography="t7" fontWeight="medium">
+            우선 순위
+          </Text>
+          <Spacing size={13} />
+          <SegmentedControl
+            alignment="fixed"
+            value={priority}
+            disabled={false}
+            size="small"
+            name="priority"
+            onChange={(value) => setPriority(value as Priority)}
+          >
+            <SegmentedControl.Item value="simple">간단</SegmentedControl.Item>
+            <SegmentedControl.Item value="normal">중간</SegmentedControl.Item>
+            <SegmentedControl.Item value="important">중요</SegmentedControl.Item>
+          </SegmentedControl>
+          <Spacing size={12} />
+          <div className="create-task-message-box">
+            <Text display="block" color={adaptive.blue600} typography="t6" fontWeight="semibold" textAlign="center">
+              {priorityDescriptions[priority]}
+            </Text>
+          </div>
+        </section>
 
-        <List>
-          <ListHeader
-            title={
-              <ListHeader.TitleParagraph typography="t5" fontWeight="bold">
-                알림 수단
-              </ListHeader.TitleParagraph>
-            }
+        <section className="create-task-section create-task-random-section">
+          <Text display="block" color={adaptive.grey700} typography="t7" fontWeight="medium">
+            랜덤 알림
+          </Text>
+          <Spacing size={26} />
+          <Slider
+            value={randomness}
+            minValue={0}
+            maxValue={100}
+            color="#3182f6"
+            label={{ max: "불규칙적", min: "규칙적" }}
+            onValueChange={setRandomness}
           />
-          <ListRow
-            verticalPadding="large"
-            contents={
-              <ListRow.Texts
-                type="2RowTypeA"
-                top="토스 앱 푸시"
-                topProps={{ color: colors.grey800, fontWeight: "bold" }}
-                bottom="기본으로 먼저 보내요"
-                bottomProps={{ color: colors.grey600 }}
-              />
-            }
-            right={<Switch checked={true} disabled={true} />}
-          />
-          <ListRow
-            verticalPadding="large"
-            contents={
-              <ListRow.Texts
-                type="2RowTypeA"
-                top="SMS 대체 발송"
-                topProps={{ color: colors.grey800, fontWeight: "bold" }}
-                bottom="푸시를 보낼 수 없을 때만 사용해요"
-                bottomProps={{ color: colors.grey600 }}
-              />
-            }
-            right={
-              <Switch
-                checked={smsEnabled}
-                onChange={(_, checked) => {
-                  setSmsEnabled(checked);
-                  if (!checked) {
-                    setSmsConsentChecked(false);
-                    setPhoneNumber("");
-                  }
-                }}
-              />
-            }
-          />
-        </List>
-
-        {smsEnabled && (
-          <section className="app-section app-section--stack">
-            <TextField
-              variant="box"
-              label="휴대폰 번호"
-              labelOption="sustain"
-              placeholder="01012345678"
-              value={phoneNumber}
-              inputMode="tel"
-              onChange={(event) => setPhoneNumber(event.currentTarget.value)}
-              help="SMS 발송과 수신 거부 처리에만 사용해요."
-            />
-
-            <div className="consent-row">
-              <Checkbox.Line
-                checked={smsConsentChecked}
-                onCheckedChange={setSmsConsentChecked}
-                aria-label="SMS 수신 동의"
-              />
-              <Text typography="t6" color={colors.grey700}>
-                푸시 발송이 어려운 경우 SMS로 리마인더를 받을 수 있고, 문자 안의 안내로
-                언제든 수신을 거부할 수 있어요.
-              </Text>
-            </div>
-          </section>
-        )}
+          <Spacing size={18} />
+          <div className="create-task-message-box">
+            <Text display="block" color={adaptive.blue600} typography="t6" fontWeight="semibold" textAlign="center">
+              {randomDescription}
+            </Text>
+          </div>
+        </section>
 
         {(formError ?? error) && (
-          <section className="app-section">
-            <Text typography="t6" color={colors.red500}>
+          <section className="create-task-error-section">
+            <Text typography="t6" color={adaptive.red600}>
               {formError ?? error}
             </Text>
           </section>
         )}
 
-        <section className="app-section app-actions">
-          <Button
-            type="submit"
-            size="large"
-            color="primary"
-            loading={submitting}
-            disabled={!canSubmit || submitting}
-          >
-            만들기
-          </Button>
-          <TextButton size="medium" color={colors.grey600} onClick={onBack}>
-            취소
-          </TextButton>
-        </section>
+        <FixedBottomCTA type="button" loading={submitting} disabled={submitting} onClick={submitReminder}>
+          추가하기
+        </FixedBottomCTA>
       </form>
     </main>
   );
