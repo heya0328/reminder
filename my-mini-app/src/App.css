@@ -143,6 +143,12 @@
   padding-left: 0 !important;
 }
 
+.create-task-section > div:has([role="radiogroup"]) > div,
+.create-task-section > div:has([role="radiogroup"]) > div > div {
+  width: 100% !important;
+  max-width: none !important;
+}
+
 .create-task-message-box {
   display: flex;
   min-height: 62px;
