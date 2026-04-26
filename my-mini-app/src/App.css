@@ -137,8 +137,10 @@
   margin-left: 0;
 }
 
-.create-task-section > [class*="css-"]:has([role="radiogroup"]) {
+.create-task-section > div:has(> [role="radiogroup"]) {
   width: 100%;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
 }
 
 .create-task-message-box {
