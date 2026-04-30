@@ -1,11 +1,11 @@
 import { defineConfig } from "@apps-in-toss/web-framework/config";
 
 export default defineConfig({
-  appName: "random-reminder",
+  appName: "randominder",
   brand: {
-    displayName: "랜덤 리마인더",
+    displayName: "랜덤알림",
     primaryColor: "#3182F6",
-    icon: "",
+    icon: "https://static.toss.im/appsintoss/30619/c9580170-a164-4b5e-a4b7-14ce09d723dd.png",
   },
   web: {
     host: "localhost",
