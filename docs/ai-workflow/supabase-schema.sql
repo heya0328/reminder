@@ -7,7 +7,8 @@ create table if not exists public.users (
 
 create table if not exists public.notification_consents (
   user_id text primary key references public.users(id) on delete cascade,
-  push_enabled boolean not null default true,
+  push_enabled boolean not null default false,
+  push_consented_at timestamptz,
   sms_enabled boolean not null default false,
   sms_unsubscribed_at timestamptz,
   updated_at timestamptz not null
@@ -20,8 +21,10 @@ create table if not exists public.reminders (
   allowed_start_hour integer not null check (allowed_start_hour >= 0 and allowed_start_hour <= 23),
   allowed_end_hour integer not null check (allowed_end_hour >= 1 and allowed_end_hour <= 24),
   intensity text not null check (intensity in ('gentle', 'normal', 'strong')),
+  randomness integer not null default 50 check (randomness >= 0 and randomness <= 100),
   status text not null check (status in ('active', 'completed', 'disabled')),
   snoozed_until timestamptz,
+  completed_at timestamptz,
   created_at timestamptz not null,
   updated_at timestamptz not null
 );
@@ -30,7 +33,7 @@ create table if not exists public.reminder_events (
   id text primary key,
   reminder_id text not null references public.reminders(id) on delete cascade,
   user_id text not null references public.users(id) on delete cascade,
-  type text not null check (type in ('created', 'completed', 'snoozed', 'sent', 'skipped')),
+  type text not null check (type in ('created', 'completed', 'snoozed', 'unsnoozed', 'sent', 'skipped')),
   metadata_json jsonb not null default '{}'::jsonb,
   created_at timestamptz not null
 );
