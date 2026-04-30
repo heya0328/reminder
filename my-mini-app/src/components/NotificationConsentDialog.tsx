@@ -34,7 +34,7 @@ export function NotificationConsentDialog({
         </ConfirmDialog.ConfirmButton>
       }
       cancelButton={
-        <ConfirmDialog.CancelButton size="large" onClick={onCancel}>
+        <ConfirmDialog.CancelButton size="large" disabled={loading} onClick={onCancel}>
           취소
         </ConfirmDialog.CancelButton>
       }

@@ -21,7 +21,7 @@ export function useNotificationConsent(tossUserKey: string | null) {
     if (fetchedKeyRef.current === tossUserKey) return;
     fetchedKeyRef.current = tossUserKey;
 
-    setState((prev) => ({ ...prev, loading: true, error: null }));
+    setState({ hasConsented: false, loading: true, error: null });
     void getConsent(tossUserKey)
       .then((consent) => {
         setState({
