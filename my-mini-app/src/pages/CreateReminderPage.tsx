@@ -1,7 +1,5 @@
 import { adaptive } from "@toss/tds-colors";
 import {
-  Asset,
-  Border,
   FixedBottomCTA,
   SegmentedControl,
   Slider,
@@ -9,15 +7,19 @@ import {
   Text,
   TextArea,
 } from "@toss/tds-mobile";
-import { FormEvent, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { NotificationConsentDialog } from "../components/NotificationConsentDialog";
 import type { CreateReminderInput, ReminderIntensity } from "../types/reminder";
 
 interface CreateReminderPageProps {
   error: string | null;
+  hasConsented: boolean;
+  consentLoading: boolean;
   onBack: () => void;
   onCreated: () => void;
   onCreate: (input: Omit<CreateReminderInput, "tossUserKey">) => Promise<void>;
+  onRequestConsent: () => Promise<void>;
 }
 
 type Priority = "simple" | "normal" | "important";
@@ -34,6 +36,12 @@ const priorityDescriptions: Record<Priority, string> = {
   important: "잊으면 곤란한 중요한 일",
 };
 
+const priorityDefaultRandomness: Record<Priority, number> = {
+  simple: 100,
+  normal: 50,
+  important: 0,
+};
+
 const randomReminderDescriptions = [
   { value: 0, text: "오늘 안에 한 번 확실히 알려드릴게요" },
   { value: 25, text: "내일 안에 한 번 다시 떠올려드릴게요" },
@@ -44,38 +52,48 @@ const randomReminderDescriptions = [
 
 export function CreateReminderPage({
   error,
-  onBack,
+  hasConsented,
+  consentLoading,
   onCreated,
   onCreate,
+  onRequestConsent,
 }: CreateReminderPageProps) {
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<Priority>("normal");
   const [randomness, setRandomness] = useState(50);
+  const [randomnessTouched, setRandomnessTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const [consentDialogOpen, setConsentDialogOpen] = useState(false);
+  const [consentSubmitting, setConsentSubmitting] = useState(false);
+  const pendingPayloadRef = useRef<Omit<CreateReminderInput, "tossUserKey"> | null>(null);
+
+  useEffect(() => {
+    // 오토포커스
+    setTimeout(() => textAreaRef.current?.focus(), 300);
+
+    // 키보드 감지: visualViewport resize
+    const vv = window.visualViewport;
+    if (!vv) return;
+    function handleResize() {
+      const threshold = window.innerHeight * 0.75;
+      setKeyboardOpen((vv?.height ?? window.innerHeight) < threshold);
+    }
+    vv.addEventListener("resize", handleResize);
+    return () => vv.removeEventListener("resize", handleResize);
+  }, []);
 
   const randomDescription =
     randomReminderDescriptions.find((description) => description.value === randomness)?.text ??
     randomReminderDescriptions[2].text;
 
-  async function submitReminder() {
-    setFormError(null);
-
-    if (title.trim().length === 0) {
-      setFormError("할 일을 작성해주세요.");
-      return;
-    }
-
+  async function performCreate(payload: Omit<CreateReminderInput, "tossUserKey">) {
     setSubmitting(true);
-
     try {
-      await onCreate({
-        title: title.trim(),
-        allowedStartHour: 9,
-        allowedEndHour: 22,
-        intensity: priorityToIntensity[priority],
-        smsEnabled: false,
-      });
+      await onCreate(payload);
       onCreated();
     } catch (caughtError) {
       setFormError(
@@ -88,71 +106,88 @@ export function CreateReminderPage({
     }
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    await submitReminder();
+  async function submitReminder() {
+    setFormError(null);
+    setTitleError(false);
+
+    if (title.trim().length === 0) {
+      setTitleError(true);
+      return;
+    }
+
+    const payload: Omit<CreateReminderInput, "tossUserKey"> = {
+      title: title.trim(),
+      allowedStartHour: 9,
+      allowedEndHour: 22,
+      intensity: priorityToIntensity[priority],
+      randomness,
+    };
+
+    if (!hasConsented) {
+      pendingPayloadRef.current = payload;
+      setConsentDialogOpen(true);
+      return;
+    }
+
+    await performCreate(payload);
+  }
+
+  async function handleConsentConfirm() {
+    setConsentSubmitting(true);
+    try {
+      await onRequestConsent();
+      setConsentDialogOpen(false);
+      const payload = pendingPayloadRef.current;
+      pendingPayloadRef.current = null;
+      if (payload) {
+        await performCreate(payload);
+      }
+    } catch (caughtError) {
+      setFormError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "동의 저장에 실패했어요. 다시 시도해 주세요.",
+      );
+      setConsentDialogOpen(false);
+    } finally {
+      setConsentSubmitting(false);
+    }
+  }
+
+  function handleConsentCancel() {
+    pendingPayloadRef.current = null;
+    setConsentDialogOpen(false);
   }
 
   return (
     <main className="app-page create-task-page">
-      <div className="create-task-appbar" aria-label="앱 상단 메뉴">
-        <button className="create-task-icon-button" type="button" onClick={onBack} aria-label="뒤로가기">
-          <Asset.Icon
-            frameShape={Asset.frameShape.CleanW24}
-            name="icon-arrow-back-ios-mono"
-            color="#191F28ff"
-            aria-hidden={true}
-          />
-        </button>
-        <div className="create-task-brand">
-          <Asset.Image
-            frameShape={Asset.frameShape.CleanW16}
-            src="https://static.toss.im/appsintoss/30619/a5a2f92e-5163-458e-a027-5cafedb34a8f.png"
-            aria-hidden={true}
-          />
-          <Text color="#191F28ff" typography="t6" fontWeight="semibold">
-            랜덤노트
-          </Text>
-        </div>
-        <div className="create-task-window-actions" aria-hidden={true}>
-          <Asset.Icon
-            frameShape={Asset.frameShape.CleanW20}
-            name="icon-dots-mono"
-            color="rgba(0, 19, 43, 0.58)"
-            aria-hidden={true}
-          />
-          <span className="create-task-window-divider" />
-          <Asset.Icon
-            frameShape={Asset.frameShape.CleanW20}
-            name="icon-x-mono"
-            color="rgba(0, 19, 43, 0.58)"
-            aria-hidden={true}
-          />
-        </div>
-      </div>
-
       <section className="create-task-title-section">
         <Text display="block" color={adaptive.grey900} typography="t3" fontWeight="bold">
           할 일 추가
         </Text>
       </section>
 
-      <form className="create-task-form" onSubmit={handleSubmit}>
+      <div className="create-task-form">
         <section className="create-task-textarea-section">
           <TextArea
+            ref={textAreaRef}
             className="create-task-textarea"
             variant="box"
-            hasError={false}
+            hasError={titleError}
+            help={titleError ? "할 일을 작성해주세요" : undefined}
             label=""
             labelOption="sustain"
             placeholder="여기에 할 일을 작성해주세요"
             value={title}
-            onChange={(event) => setTitle(event.currentTarget.value)}
+            onChange={(event) => {
+              setTitle(event.currentTarget.value);
+              if (titleError) setTitleError(false);
+            }}
             minHeight={78}
           />
         </section>
 
-        <Border variant="height16" />
+        <div className="create-task-border" />
 
         <section className="create-task-section">
           <Spacing size={20} />
@@ -166,11 +201,17 @@ export function CreateReminderPage({
             disabled={false}
             size="small"
             name="priority"
-            onChange={(value) => setPriority(value as Priority)}
+            onChange={(value) => {
+              const p = value as Priority;
+              setPriority(p);
+              if (!randomnessTouched) {
+                setRandomness(priorityDefaultRandomness[p]);
+              }
+            }}
           >
             <SegmentedControl.Item value="simple">간단</SegmentedControl.Item>
-            <SegmentedControl.Item value="normal">중간</SegmentedControl.Item>
-            <SegmentedControl.Item value="important">중요</SegmentedControl.Item>
+            <SegmentedControl.Item value="normal">보통</SegmentedControl.Item>
+            <SegmentedControl.Item value="important">긴급</SegmentedControl.Item>
           </SegmentedControl>
           <Spacing size={12} />
           <div className="create-task-message-box">
@@ -192,7 +233,10 @@ export function CreateReminderPage({
             step={25}
             color="#3182f6"
             label={{ max: "불규칙적", min: "규칙적" }}
-            onValueChange={setRandomness}
+            onValueChange={(v) => {
+              setRandomness(v);
+              setRandomnessTouched(true);
+            }}
           />
           <Spacing size={18} />
           <div className="create-task-message-box">
@@ -209,11 +253,24 @@ export function CreateReminderPage({
             </Text>
           </section>
         )}
+      </div>
 
-        <FixedBottomCTA type="button" loading={submitting} disabled={submitting} onClick={submitReminder}>
+      {!keyboardOpen && (
+        <FixedBottomCTA
+          size="large"
+          loading={submitting || consentSubmitting}
+          disabled={submitting || consentSubmitting || consentLoading}
+          onClick={submitReminder}
+        >
           추가하기
         </FixedBottomCTA>
-      </form>
+      )}
+      <NotificationConsentDialog
+        open={consentDialogOpen}
+        loading={consentSubmitting}
+        onConfirm={handleConsentConfirm}
+        onCancel={handleConsentCancel}
+      />
     </main>
   );
 }
