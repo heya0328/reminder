@@ -20,6 +20,7 @@ interface CreateReminderPageProps {
   onCreated: () => void;
   onCreate: (input: Omit<CreateReminderInput, "tossUserKey">) => Promise<void>;
   onRequestConsent: () => Promise<void>;
+  onConsentError: (message: string) => void;
 }
 
 type Priority = "simple" | "normal" | "important";
@@ -57,6 +58,7 @@ export function CreateReminderPage({
   onCreated,
   onCreate,
   onRequestConsent,
+  onConsentError,
 }: CreateReminderPageProps) {
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<Priority>("normal");
@@ -133,6 +135,7 @@ export function CreateReminderPage({
   }
 
   async function handleConsentConfirm() {
+    if (consentSubmitting) return;
     setConsentSubmitting(true);
     try {
       await onRequestConsent();
@@ -143,12 +146,13 @@ export function CreateReminderPage({
         await performCreate(payload);
       }
     } catch (caughtError) {
-      setFormError(
+      const message =
         caughtError instanceof Error
           ? caughtError.message
-          : "동의 저장에 실패했어요. 다시 시도해 주세요.",
-      );
+          : "동의 저장에 실패했어요. 다시 시도해 주세요.";
       setConsentDialogOpen(false);
+      pendingPayloadRef.current = null;
+      onConsentError(message);
     } finally {
       setConsentSubmitting(false);
     }

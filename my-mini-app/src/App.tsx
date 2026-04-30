@@ -43,6 +43,16 @@ function App() {
     [openToast],
   );
 
+  const showErrorToast = useCallback(
+    (text: string) => {
+      void openToast(text, {
+        type: "bottom",
+        higherThanCTA: true,
+      });
+    },
+    [openToast],
+  );
+
   // 딥링크 처리: 푸시 알림 탭 시 해당 경로로 이동
   const handleDeepLink = useCallback(
     async (path: string) => {
@@ -105,6 +115,7 @@ function App() {
         hasConsented={consent.hasConsented}
         consentLoading={consent.loading}
         onRequestConsent={consent.consent}
+        onConsentError={showErrorToast}
         onBack={() => router.back()}
         onCreated={() => ad.showAd(() => {
           router.navigate("/");
