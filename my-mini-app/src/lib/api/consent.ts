@@ -51,5 +51,6 @@ export async function recordPushConsent(tossUserKey: string): Promise<ConsentSta
     },
   );
   const row = rows[0];
+  if (!row) throw new Error("동의 정보를 찾을 수 없어요. 잠시 후 다시 시도해 주세요.");
   return { pushEnabled: row.push_enabled, pushConsentedAt: row.push_consented_at };
 }
