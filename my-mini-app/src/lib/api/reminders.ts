@@ -1,46 +1,163 @@
 import type { CreateReminderInput, Reminder } from "../../types/reminder";
-import { apiRequest } from "./client";
+import { supabaseDelete, supabaseGet, supabasePatch, supabasePost } from "./supabase";
 
-type ReminderListResponse = Reminder[] | { reminders: Reminder[] };
-type ReminderResponse = Reminder | { reminder: Reminder };
-
-function unwrapReminders(response: ReminderListResponse): Reminder[] {
-  return Array.isArray(response) ? response : response.reminders;
+interface SupabaseReminder {
+  id: string;
+  user_id: string;
+  title: string;
+  allowed_start_hour: number;
+  allowed_end_hour: number;
+  intensity: string;
+  randomness: number;
+  status: string;
+  snoozed_until: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
-function unwrapReminder(response: ReminderResponse): Reminder {
-  return "reminder" in response ? response.reminder : response;
+interface SupabaseUser {
+  id: string;
+  toss_user_key: string;
 }
 
-export async function createReminder(
-  input: CreateReminderInput,
-): Promise<Reminder> {
-  const response = await apiRequest<ReminderResponse>("/api/reminders", {
-    method: "POST",
-    body: input,
+function toReminder(row: SupabaseReminder): Reminder {
+  return {
+    id: row.id,
+    title: row.title,
+    allowedStartHour: row.allowed_start_hour,
+    allowedEndHour: row.allowed_end_hour,
+    intensity: row.intensity as Reminder["intensity"],
+    randomness: row.randomness ?? 50,
+    status: row.status as Reminder["status"],
+    snoozedUntil: row.snoozed_until,
+    completedAt: row.completed_at,
+    createdAt: row.created_at,
+  };
+}
+
+function genId(prefix: string) {
+  return `${prefix}_${crypto.randomUUID()}`;
+}
+
+async function ensureUser(tossUserKey: string): Promise<string> {
+  // 기존 유저 조회
+  const existing = await supabaseGet<SupabaseUser[]>(
+    "users",
+    `toss_user_key=eq.${encodeURIComponent(tossUserKey)}&select=id`,
+  );
+  if (existing.length > 0) return existing[0].id;
+
+  // 새 유저 생성
+  const userId = genId("user");
+  await supabasePost("users", {
+    id: userId,
+    toss_user_key: tossUserKey,
+    phone_number: null,
+    created_at: new Date().toISOString(),
   });
-  return unwrapReminder(response);
+  await supabasePost("notification_consents", {
+    user_id: userId,
+    push_enabled: false,
+    push_consented_at: null,
+    sms_enabled: false,
+    sms_unsubscribed_at: null,
+    updated_at: new Date().toISOString(),
+  });
+  return userId;
+}
+
+export async function createReminder(input: CreateReminderInput): Promise<Reminder> {
+  const userId = await ensureUser(input.tossUserKey);
+  const now = new Date().toISOString();
+  const id = genId("rem");
+
+  const rows = await supabasePost<SupabaseReminder[]>("reminders", {
+    id,
+    user_id: userId,
+    title: input.title,
+    allowed_start_hour: input.allowedStartHour,
+    allowed_end_hour: input.allowedEndHour,
+    intensity: input.intensity,
+    randomness: input.randomness,
+    status: "active",
+    snoozed_until: null,
+    created_at: now,
+    updated_at: now,
+  });
+
+  return toReminder(rows[0]);
 }
 
 export async function listReminders(tossUserKey: string): Promise<Reminder[]> {
-  const params = new URLSearchParams({ tossUserKey });
-  const response = await apiRequest<ReminderListResponse>(
-    `/api/reminders?${params.toString()}`,
+  // 유저 ID 조회
+  const users = await supabaseGet<SupabaseUser[]>(
+    "users",
+    `toss_user_key=eq.${encodeURIComponent(tossUserKey)}&select=id`,
   );
+  if (users.length === 0) return [];
 
-  return unwrapReminders(response);
+  const userId = users[0].id;
+  const rows = await supabaseGet<SupabaseReminder[]>(
+    "reminders",
+    `user_id=eq.${encodeURIComponent(userId)}&select=*&order=created_at.desc`,
+  );
+  return rows.map(toReminder);
+}
+
+export async function updateReminder(id: string, input: { title?: string; intensity?: string; randomness?: number }): Promise<Reminder> {
+  const body: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (input.title != null) body.title = input.title;
+  if (input.intensity != null) body.intensity = input.intensity;
+  if (input.randomness != null) body.randomness = input.randomness;
+
+  const rows = await supabasePatch<SupabaseReminder[]>(
+    "reminders",
+    `id=eq.${encodeURIComponent(id)}`,
+    body,
+  );
+  return toReminder(rows[0]);
 }
 
 export async function completeReminder(id: string): Promise<Reminder> {
-  const response = await apiRequest<ReminderResponse>(`/api/reminders/${id}/complete`, {
-    method: "POST",
-  });
-  return unwrapReminder(response);
+  const now = new Date().toISOString();
+  const rows = await supabasePatch<SupabaseReminder[]>(
+    "reminders",
+    `id=eq.${encodeURIComponent(id)}`,
+    { status: "completed", completed_at: now, updated_at: now },
+  );
+  return toReminder(rows[0]);
+}
+
+export async function deleteReminder(id: string): Promise<void> {
+  await supabaseDelete("reminders", `id=eq.${encodeURIComponent(id)}`);
 }
 
 export async function snoozeReminder(id: string): Promise<Reminder> {
-  const response = await apiRequest<ReminderResponse>(`/api/reminders/${id}/snooze`, {
-    method: "POST",
-  });
-  return unwrapReminder(response);
+  // 현재 상태 확인
+  const current = await supabaseGet<SupabaseReminder[]>(
+    "reminders",
+    `id=eq.${encodeURIComponent(id)}&select=snoozed_until`,
+  );
+
+  const isCurrentlySnoozed = current[0]?.snoozed_until && new Date(current[0].snoozed_until) > new Date();
+
+  let snoozedUntil: string | null;
+  if (isCurrentlySnoozed) {
+    snoozedUntil = null;
+  } else {
+    // 오늘 KST 23:59:59까지
+    const now = new Date();
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const kstNow = new Date(now.getTime() + kstOffset);
+    const endOfDayKST = new Date(Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate(), 23, 59, 59, 999));
+    snoozedUntil = new Date(endOfDayKST.getTime() - kstOffset).toISOString();
+  }
+
+  const rows = await supabasePatch<SupabaseReminder[]>(
+    "reminders",
+    `id=eq.${encodeURIComponent(id)}`,
+    { snoozed_until: snoozedUntil, updated_at: new Date().toISOString() },
+  );
+  return toReminder(rows[0]);
 }
