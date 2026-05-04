@@ -5,7 +5,6 @@ import { runReminderBatch } from "./runReminderBatch.ts";
 export interface BatchRouteOptions {
   repo: ReminderRepository;
   pushProvider: ReminderProvider;
-  smsProvider: ReminderProvider;
   batchSecret?: string;
 }
 
@@ -18,7 +17,6 @@ export async function runProtectedBatch(options: BatchRouteOptions, providedSecr
     statusCode: 200,
     body: await runReminderBatch(options.repo, {
       pushProvider: options.pushProvider,
-      smsProvider: options.smsProvider,
     }),
   };
 }

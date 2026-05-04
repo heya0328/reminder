@@ -9,7 +9,10 @@ vite.config.d.ts
 server/.env
 server/.env.local
 server/certs/
+server/.batch-secret-prod.txt
 *.ait
 server/random-reminder.json
 .worktrees/*
 !.worktrees/.gitkeep
+.claude/
+supabase/.temp/

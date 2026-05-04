@@ -3,17 +3,20 @@ import { useCallback, useEffect, useState } from "react";
 import {
   completeReminder,
   createReminder,
+  deleteReminder,
   listReminders,
   snoozeReminder,
+  updateReminder,
 } from "../lib/api/reminders";
 import type { CreateReminderInput, Reminder } from "../types/reminder";
 
-export function useReminders(tossUserKey: string) {
+export function useReminders(tossUserKey: string | null) {
   const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
+    if (!tossUserKey) return;
     setLoading(true);
     setError(null);
 
@@ -33,6 +36,7 @@ export function useReminders(tossUserKey: string) {
 
   const create = useCallback(
     async (input: Omit<CreateReminderInput, "tossUserKey">) => {
+      if (!tossUserKey) throw new Error("로그인이 필요해요.");
       setError(null);
       const reminder = await createReminder({ ...input, tossUserKey });
       setReminders((current) => [reminder, ...current]);
@@ -41,6 +45,15 @@ export function useReminders(tossUserKey: string) {
     [tossUserKey],
   );
 
+  const update = useCallback(async (id: string, input: { title?: string; intensity?: string; randomness?: number }) => {
+    setError(null);
+    const reminder = await updateReminder(id, input);
+    setReminders((current) =>
+      current.map((item) => (item.id === id ? reminder : item)),
+    );
+    return reminder;
+  }, []);
+
   const complete = useCallback(async (id: string) => {
     setError(null);
     const reminder = await completeReminder(id);
@@ -48,6 +61,12 @@ export function useReminders(tossUserKey: string) {
       current.map((item) => (item.id === id ? reminder : item)),
     );
     return reminder;
+  }, []);
+
+  const remove = useCallback(async (id: string) => {
+    setError(null);
+    await deleteReminder(id);
+    setReminders((current) => current.filter((item) => item.id !== id));
   }, []);
 
   const snooze = useCallback(async (id: string) => {
@@ -69,7 +88,9 @@ export function useReminders(tossUserKey: string) {
     error,
     refresh,
     create,
+    update,
     complete,
     snooze,
+    remove,
   };
 }

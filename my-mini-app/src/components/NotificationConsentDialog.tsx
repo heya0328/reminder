@@ -20,7 +20,7 @@ export function NotificationConsentDialog({
       title={<ConfirmDialog.Title>알림을 보낼까요?</ConfirmDialog.Title>}
       description={
         <ConfirmDialog.Description>
-          {"일정을 알림으로 보내드려요.\n설정에서 언제든지 해제할 수 있어요."}
+          {"내가 추가한 일정만 알림을 보낼게요.\n설정 페이지에서 언제든 끌 수 있어요."}
         </ConfirmDialog.Description>
       }
       confirmButton={

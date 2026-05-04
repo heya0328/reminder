@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "granite dev --host localhost --port 53117",
+    "dev": "granite dev --host 0.0.0.0 --port 8081",
     "build": "ait build",
     "deploy": "ait deploy",
     "lint": "eslint .",

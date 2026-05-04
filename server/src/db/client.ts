@@ -161,6 +161,7 @@ interface SupabaseReminder {
   allowed_start_hour: number;
   allowed_end_hour: number;
   intensity: Reminder["intensity"];
+  randomness: number;
   status: Reminder["status"];
   snoozed_until: string | null;
   created_at: string;
@@ -233,6 +234,7 @@ function fromSupabaseReminder(row: SupabaseReminder): Reminder {
     allowedStartHour: row.allowed_start_hour,
     allowedEndHour: row.allowed_end_hour,
     intensity: row.intensity,
+    randomness: row.randomness ?? 50,
     status: row.status,
     snoozedUntil: row.snoozed_until,
     createdAt: row.created_at,
@@ -248,6 +250,7 @@ function toSupabaseReminder(row: Reminder): SupabaseReminder {
     allowed_start_hour: row.allowedStartHour,
     allowed_end_hour: row.allowedEndHour,
     intensity: row.intensity,
+    randomness: row.randomness,
     status: row.status,
     snoozed_until: row.snoozedUntil,
     created_at: row.createdAt,

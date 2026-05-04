@@ -2,7 +2,7 @@ export type ReminderIntensity = "gentle" | "normal" | "strong";
 export type ReminderStatus = "active" | "completed" | "disabled";
 export type Channel = "push" | "sms";
 export type SendStatus = "sent" | "failed" | "skipped";
-export type ReminderEventType = "created" | "completed" | "snoozed" | "sent" | "skipped";
+export type ReminderEventType = "created" | "completed" | "snoozed" | "unsnoozed" | "sent" | "skipped";
 
 export interface User {
   id: string;
@@ -26,6 +26,7 @@ export interface Reminder {
   allowedStartHour: number;
   allowedEndHour: number;
   intensity: ReminderIntensity;
+  randomness: number;
   status: ReminderStatus;
   snoozedUntil: string | null;
   createdAt: string;

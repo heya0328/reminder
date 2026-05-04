@@ -41,8 +41,8 @@
 }
 
 .create-task-page {
-  --create-page-x: 28px;
-  --create-control-x: 20px;
+  --create-page-x: 24px;
+  --create-control-x: 24px;
   --create-message-border: rgba(49, 130, 246, 0.32);
   --create-message-bg: rgba(49, 130, 246, 0.1);
 
@@ -107,7 +107,7 @@
 }
 
 .create-task-textarea-section {
-  padding: 68px var(--create-page-x) 0;
+  padding: 40px 0 0;
 }
 
 .create-task-textarea-section > *,
@@ -129,39 +129,16 @@
 
 .create-task-section {
   padding: 0 var(--create-control-x);
+  overflow: visible;
 }
 
-.create-task-section [role="radiogroup"],
-.create-task-section [data-tds-component-name="SegmentedControl"] {
-  width: 100% !important;
-  max-width: none !important;
-  margin-left: 0;
-  margin-right: 0 !important;
+.create-task-section > div[class] {
   padding-left: 0 !important;
   padding-right: 0 !important;
-}
-
-.create-task-section > div:has(> [role="radiogroup"]) {
-  width: 100%;
-  margin-right: 0 !important;
-  margin-left: 0 !important;
-  padding-right: 0 !important;
-  padding-left: 0 !important;
-}
-
-.create-task-section > div:has([role="radiogroup"]) > div,
-.create-task-section > div:has([role="radiogroup"]) > div > div {
-  width: 100% !important;
-  max-width: none !important;
-  margin-right: 0 !important;
-  margin-left: 0 !important;
-  padding-right: 0 !important;
-  padding-left: 0 !important;
 }
 
 .create-task-message-box {
   display: flex;
-  min-height: 62px;
   align-items: center;
   justify-content: center;
   padding: 10px 16px;
@@ -175,7 +152,72 @@
 }
 
 .create-task-error-section {
-  padding: 18px 32px 0;
+  padding: 18px 24px 0;
+}
+
+.home-page {
+  padding-bottom: 120px;
+}
+
+#root > main > ul {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.home-page ul > li:not(.home-banner-ad-item) > div {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+
+.home-page > div[class] {
+  --tab-left-padding: 8px !important;
+  --tab-right-padding: 8px !important;
+}
+
+.home-list-text-truncate {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  word-break: break-all !important;
+  white-space: normal !important;
+}
+
+.home-reminder-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.home-reminder-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 24px;
+  cursor: pointer;
+}
+
+.home-reminder-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-reminder-badge {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 27, 55, 0.1);
+  background: #ffffff;
+}
+
+.create-task-border {
+  width: 100%;
+  min-height: 16px;
+  background-color: #F2F4F6;
 }
 
 @media (min-width: 481px) {

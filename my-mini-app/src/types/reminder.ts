@@ -8,17 +8,18 @@ export interface Reminder {
   allowedStartHour: number;
   allowedEndHour: number;
   intensity: ReminderIntensity;
+  randomness: number;
   status: ReminderStatus;
   snoozedUntil: string | null;
+  completedAt: string | null;
   createdAt: string;
 }
 
 export interface CreateReminderInput {
   tossUserKey: string;
-  phoneNumber?: string;
-  smsEnabled: boolean;
   title: string;
   allowedStartHour: number;
   allowedEndHour: number;
   intensity: ReminderIntensity;
+  randomness: number;
 }

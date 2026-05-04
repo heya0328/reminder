@@ -143,6 +143,16 @@ export class ReminderRepository {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
+  updateReminder(id: string, input: { title?: string; intensity?: ReminderIntensity }): Reminder | null {
+    const reminder = this.getReminder(id);
+    if (!reminder) return null;
+    if (input.title != null) reminder.title = input.title;
+    if (input.intensity != null) reminder.intensity = input.intensity;
+    reminder.updatedAt = nowIso();
+    this.store.persist();
+    return reminder;
+  }
+
   updateReminderStatus(id: string, status: ReminderStatus): Reminder | null {
     const reminder = this.getReminder(id);
     if (!reminder) return null;
@@ -161,6 +171,16 @@ export class ReminderRepository {
     reminder.snoozedUntil = snoozedUntil;
     reminder.updatedAt = nowIso();
     this.addEvent({ reminderId: reminder.id, userId: reminder.userId, type: "snoozed", metadata: { snoozedUntil } });
+    this.store.persist();
+    return reminder;
+  }
+
+  unsnoozeReminder(id: string): Reminder | null {
+    const reminder = this.getReminder(id);
+    if (!reminder) return null;
+    reminder.snoozedUntil = null;
+    reminder.updatedAt = nowIso();
+    this.addEvent({ reminderId: reminder.id, userId: reminder.userId, type: "unsnoozed", metadata: {} });
     this.store.persist();
     return reminder;
   }

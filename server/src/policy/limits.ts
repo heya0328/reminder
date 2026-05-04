@@ -8,6 +8,18 @@ export function maxDailySendsForIntensity(intensity: ReminderIntensity) {
   return 3;
 }
 
+/**
+ * randomness(0~100) → 발송 기간(일수)
+ * 0 → 1일(오늘), 25 → 2일, 50 → 3일, 75 → 4일, 100 → 5일
+ */
+export function spreadDaysForRandomness(randomness: number): number {
+  if (randomness <= 0) return 1;
+  if (randomness <= 25) return 2;
+  if (randomness <= 50) return 3;
+  if (randomness <= 75) return 4;
+  return 5;
+}
+
 export function hourInSeoul(date: Date) {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: TIME_ZONE,
